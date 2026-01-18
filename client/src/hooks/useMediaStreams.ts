@@ -91,7 +91,7 @@ export const useMediaStreams = () => {
         y: e.clientY - cameraPosition.y,
       };
     },
-    [cameraPosition]
+    [cameraPosition.x, cameraPosition.y]
   );
 
   useEffect(() => {

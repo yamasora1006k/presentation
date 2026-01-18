@@ -69,35 +69,40 @@ export default function Home() {
 
   const { getPresetPosition } = useLayoutPresets(cameraSizeMap[cameraSize]);
 
-  // Initialize settings
+  // Initialize settings - only once
   useEffect(() => {
     if (isLoaded && settings) {
       setCameraSize(settings.cameraSize);
     }
-  }, [isLoaded, settings]);
+  }, [isLoaded]);
 
-  // Connect streams to video elements
+  // Connect display stream to video element
   useEffect(() => {
     if (displayVideoRef.current && displayStream) {
       displayVideoRef.current.srcObject = displayStream;
     }
   }, [displayStream]);
 
+  // Connect camera stream to video element
   useEffect(() => {
     if (cameraVideoRef.current && cameraStream) {
       cameraVideoRef.current.srcObject = cameraStream;
     }
   }, [cameraStream]);
 
-  // Save settings when they change
+  // Save settings when they change - debounced
   useEffect(() => {
-    if (isLoaded) {
+    if (!isLoaded) return;
+
+    const timer = setTimeout(() => {
       saveSettings({
         cameraPosition,
         isMirrored,
         cameraSize,
       });
-    }
+    }, 500); // Debounce to prevent excessive saves
+
+    return () => clearTimeout(timer);
   }, [cameraPosition, isMirrored, cameraSize, isLoaded, saveSettings]);
 
   // Keyboard shortcuts
@@ -160,8 +165,8 @@ export default function Home() {
 
   const handleLayoutPreset = (preset: LayoutPreset) => {
     const newPosition = getPresetPosition(preset);
-    // Update camera position via state (would need to expose this in useMediaStreams)
-    // For now, we'll just close the menu
+    // Update camera position via state
+    // Note: This would require exposing setCameraPosition from useMediaStreams
     setShowLayoutMenu(false);
   };
 
