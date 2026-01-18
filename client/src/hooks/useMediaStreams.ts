@@ -10,8 +10,10 @@ export interface CameraPosition {
 export const useMediaStreams = () => {
   const [displayStream, setDisplayStream] = useState<MediaStream | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [isDisplayActive, setIsDisplayActive] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isAudioActive, setIsAudioActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cameraPosition, setCameraPosition] = useState<CameraPosition>({
     x: 16,
@@ -72,6 +74,33 @@ export const useMediaStreams = () => {
       setError(`カメラエラー: ${(err as Error).message}`);
     }
   }, []);
+
+  // Start audio (microphone)
+  const startAudio = useCallback(async () => {
+    try {
+      setError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      setAudioStream(stream);
+      setIsAudioActive(true);
+    } catch (err) {
+      setError(`マイクエラー: ${(err as Error).message}`);
+    }
+  }, []);
+
+  // Stop audio
+  const stopAudio = useCallback(() => {
+    if (audioStream) {
+      audioStream.getTracks().forEach((track) => track.stop());
+      setAudioStream(null);
+      setIsAudioActive(false);
+    }
+  }, [audioStream]);
 
   // Stop camera
   const stopCamera = useCallback(() => {
@@ -146,8 +175,10 @@ export const useMediaStreams = () => {
   return {
     displayStream,
     cameraStream,
+    audioStream,
     isDisplayActive,
     isCameraActive,
+    isAudioActive,
     error,
     cameraPosition,
     isMirrored,
@@ -156,6 +187,8 @@ export const useMediaStreams = () => {
     stopDisplayCapture,
     startCamera,
     stopCamera,
+    startAudio,
+    stopAudio,
     handleMouseDown,
     resizeCameraWindow,
     toggleMirror,

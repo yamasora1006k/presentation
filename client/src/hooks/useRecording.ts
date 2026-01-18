@@ -4,6 +4,7 @@ import { useFFmpeg } from './useFFmpeg';
 export const useRecording = (
   displayStream: MediaStream | null,
   cameraStream: MediaStream | null,
+  audioStream: MediaStream | null,
   cameraPosition: { x: number; y: number; width: number; height: number },
   isMirrored: boolean,
   outputFormat: 'webm' | 'mp4' = 'webm'
@@ -108,6 +109,14 @@ export const useRecording = (
       // Get canvas stream and create MediaRecorder
       const canvasStream = canvas.captureStream(30); // 30 FPS
 
+      // Add audio tracks if available
+      if (audioStream) {
+        const audioTracks = audioStream.getAudioTracks();
+        audioTracks.forEach((track) => {
+          canvasStream.addTrack(track);
+        });
+      }
+
       recordedChunksRef.current = [];
       const mediaRecorder = new MediaRecorder(canvasStream, {
         mimeType: 'video/webm;codecs=vp9',
@@ -131,7 +140,7 @@ export const useRecording = (
     } catch (err) {
       console.error('Recording error:', err);
     }
-  }, [displayStream, cameraStream, cameraPosition, isMirrored]);
+  }, [displayStream, cameraStream, audioStream, cameraPosition, isMirrored]);
 
   const stopRecording = useCallback(() => {
     if (!mediaRecorderRef.current) return;

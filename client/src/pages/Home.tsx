@@ -38,8 +38,10 @@ export default function Home() {
   const {
     displayStream,
     cameraStream,
+    audioStream,
     isDisplayActive,
     isCameraActive,
+    isAudioActive,
     error,
     cameraPosition,
     isMirrored,
@@ -48,6 +50,8 @@ export default function Home() {
     stopDisplayCapture,
     startCamera,
     stopCamera,
+    startAudio,
+    stopAudio,
     handleMouseDown,
     resizeCameraWindow,
     toggleMirror,
@@ -55,7 +59,7 @@ export default function Home() {
 
   const [outputFormat, setOutputFormat] = useState<'webm' | 'mp4'>('mp4');
   const { isRecording, recordingTime, startRecording, stopRecording, isConverting, conversionProgress } =
-    useRecording(displayStream, cameraStream, cameraPosition, isMirrored, outputFormat);
+    useRecording(displayStream, cameraStream, audioStream, cameraPosition, isMirrored, outputFormat);
 
   const displayVideoRef = useRef<HTMLVideoElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
@@ -135,6 +139,14 @@ export default function Home() {
           startDisplayCapture();
         }
       }
+      // A: Toggle audio
+      if (e.key === 'a' || e.key === 'A') {
+        if (isAudioActive) {
+          stopAudio();
+        } else {
+          startAudio();
+        }
+      }
       // Space: Toggle recording
       if (e.code === 'Space') {
         e.preventDefault();
@@ -151,10 +163,13 @@ export default function Home() {
   }, [
     isCameraActive,
     isDisplayActive,
+    isAudioActive,
     isRecording,
     toggleMirror,
     stopCamera,
     startCamera,
+    stopAudio,
+    startAudio,
     stopDisplayCapture,
     startDisplayCapture,
     startRecording,
@@ -319,6 +334,20 @@ export default function Home() {
                   {isMirrored ? 'ミラー ON' : 'ミラー OFF'}
                 </Button>
               )}
+
+              {/* Audio Toggle */}
+              <Button
+                onClick={isAudioActive ? stopAudio : startAudio}
+                variant={isAudioActive ? 'default' : 'outline'}
+                size="sm"
+                className="gap-2"
+              >
+                {isAudioActive ? (
+                  <>🎤 マイク ON</>
+                ) : (
+                  <>🎤 マイク OFF</>
+                )}
+              </Button>
 
               {/* Size Presets */}
               {isCameraActive && (
@@ -488,16 +517,20 @@ export default function Home() {
                 </kbd>{' '}
                 : カメラON/OFF
               </p>
-              <p>
-                <kbd className="px-2 py-1 bg-muted rounded text-foreground">
-                  S
-                </kbd>{' '}
-                : 画面共有開始/停止 |{' '}
-                <kbd className="px-2 py-1 bg-muted rounded text-foreground">
-                  Space
-                </kbd>{' '}
-                : 録画開始/停止
-              </p>
+            <p>
+              <kbd className="px-2 py-1 bg-muted rounded text-foreground">
+                S
+              </kbd>{' '}
+              : 画面共有開始/停止 |{' '}
+              <kbd className="px-2 py-1 bg-muted rounded text-foreground">
+                A
+              </kbd>{' '}
+              : マイクON/OFF |{' '}
+              <kbd className="px-2 py-1 bg-muted rounded text-foreground">
+                Space
+              </kbd>{' '}
+              : 録画開始/停止
+            </p>
             </div>
           </div>
         </div>
