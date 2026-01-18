@@ -28,6 +28,7 @@ import { useEffect, useRef, useState } from 'react';
  * - Size presets (S/M/L)
  * - Layout presets (4 corners)
  * - Recording with canvas composition
+ * - MP4/WebM format selection
  * - Settings persistence (LocalStorage)
  * - Keyboard shortcuts
  */
@@ -52,14 +53,16 @@ export default function Home() {
     toggleMirror,
   } = useMediaStreams();
 
-  const { isRecording, recordingTime, startRecording, stopRecording } =
-    useRecording(displayStream, cameraStream, cameraPosition, isMirrored);
+  const [outputFormat, setOutputFormat] = useState<'webm' | 'mp4'>('mp4');
+  const { isRecording, recordingTime, startRecording, stopRecording, isConverting, conversionProgress } =
+    useRecording(displayStream, cameraStream, cameraPosition, isMirrored, outputFormat);
 
   const displayVideoRef = useRef<HTMLVideoElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const [showControls, setShowControls] = useState(true);
   const [cameraSize, setCameraSize] = useState<'S' | 'M' | 'L'>('M');
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
+  const [showFormatMenu, setShowFormatMenu] = useState(false);
 
   const cameraSizeMap = {
     S: { width: 160, height: 120 },
@@ -237,6 +240,16 @@ export default function Home() {
         </div>
       )}
 
+      {/* MP4 Conversion Indicator */}
+      {isConverting && (
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-accent/20 border border-accent px-3 py-2 rounded">
+          <div className="w-3 h-3 bg-accent rounded-full animate-spin" />
+          <span className="text-accent font-mono text-sm font-semibold">
+            MP4変換中 {conversionProgress}%
+          </span>
+        </div>
+      )}
+
       {/* Control Panel */}
       {showControls && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/80 to-transparent p-4 z-10">
@@ -379,6 +392,46 @@ export default function Home() {
                 </div>
               )}
 
+              {/* Output Format Selection */}
+              {isDisplayActive && isCameraActive && (
+                <div className="relative">
+                  <Button
+                    onClick={() => setShowFormatMenu(!showFormatMenu)}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    {outputFormat.toUpperCase()}
+                  </Button>
+                  {showFormatMenu && (
+                    <div className="absolute bottom-full mb-2 left-0 bg-card border border-border rounded shadow-lg p-1 flex flex-col gap-1">
+                      <Button
+                        onClick={() => {
+                          setOutputFormat('mp4');
+                          setShowFormatMenu(false);
+                        }}
+                        variant={outputFormat === 'mp4' ? 'default' : 'outline'}
+                        size="sm"
+                        className="w-16"
+                      >
+                        MP4
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setOutputFormat('webm');
+                          setShowFormatMenu(false);
+                        }}
+                        variant={outputFormat === 'webm' ? 'default' : 'outline'}
+                        size="sm"
+                        className="w-16"
+                      >
+                        WebM
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Recording Button */}
               {isDisplayActive && isCameraActive && (
                 <Button
@@ -388,6 +441,7 @@ export default function Home() {
                   className={`gap-2 ${
                     isRecording ? 'bg-destructive hover:bg-destructive/90' : ''
                   }`}
+                  disabled={isConverting}
                 >
                   {isRecording ? (
                     <>
