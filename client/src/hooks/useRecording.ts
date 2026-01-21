@@ -6,8 +6,7 @@ export const useRecording = (
   cameraStream: MediaStream | null,
   audioStream: MediaStream | null,
   cameraPosition: { x: number; y: number; width: number; height: number },
-  isMirrored: boolean,
-  outputFormat: 'webm' | 'mp4' = 'webm'
+  isMirrored: boolean
 ) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -146,50 +145,16 @@ export const useRecording = (
     if (!mediaRecorderRef.current) return;
 
     mediaRecorderRef.current.stop();
-    mediaRecorderRef.current.onstop = async () => {
+    mediaRecorderRef.current.onstop = () => {
       const webmBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
       
-      if (outputFormat === 'mp4') {
-        // Convert to MP4
-        try {
-          console.log('MP4 conversion started, FFmpeg ready:', isFFmpegReady);
-          const mp4Blob = await convertWebMToMP4(webmBlob);
-          if (mp4Blob) {
-            console.log('MP4 conversion completed, downloading...');
-            const url = URL.createObjectURL(mp4Blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.mp4`;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 100);
-          } else {
-            console.error('MP4 conversion failed, downloading as WebM instead');
-            const url = URL.createObjectURL(webmBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 100);
-          }
-        } catch (err) {
-          console.error('MP4 conversion error:', err);
-          // Fallback to WebM
-          const url = URL.createObjectURL(webmBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 100);
-        }
-      } else {
-        // Download as WebM
-        const url = URL.createObjectURL(webmBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-      }
+      // Download as WebM
+      const url = URL.createObjectURL(webmBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 100);
     };
 
     setIsRecording(false);
@@ -201,7 +166,7 @@ export const useRecording = (
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
     }
-  }, [outputFormat, convertWebMToMP4, isFFmpegReady]);
+  }, []);
 
   return {
     isRecording,

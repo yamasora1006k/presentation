@@ -57,9 +57,8 @@ export default function Home() {
     toggleMirror,
   } = useMediaStreams();
 
-  const [outputFormat, setOutputFormat] = useState<'webm' | 'mp4'>('mp4');
   const { isRecording, recordingTime, startRecording, stopRecording, isConverting, conversionProgress } =
-    useRecording(displayStream, cameraStream, audioStream, cameraPosition, isMirrored, outputFormat);
+    useRecording(displayStream, cameraStream, audioStream, cameraPosition, isMirrored);
 
   const displayVideoRef = useRef<HTMLVideoElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
@@ -181,6 +180,10 @@ export default function Home() {
     resizeCameraWindow(size);
   };
 
+  const handleConvertToMP4 = () => {
+    window.open('https://www.freeconvert.com/ja/webm-to-mp4', '_blank');
+  };
+
   const handleLayoutPreset = (preset: LayoutPreset) => {
     const newPosition = getPresetPosition(preset);
     // Update camera position via state
@@ -267,6 +270,18 @@ export default function Home() {
           </span>
         </div>
       )}
+
+      {/* MP4 Conversion Button (Top Right) */}
+      <div className="absolute top-4 right-4 z-10">
+        <Button
+          onClick={handleConvertToMP4}
+          variant="outline"
+          size="sm"
+          className="gap-2"
+        >
+          MP4に変換
+        </Button>
+      </div>
 
       {/* Control Panel */}
       {showControls && (
@@ -424,45 +439,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Output Format Selection */}
-              {isDisplayActive && isCameraActive && (
-                <div className="relative">
-                  <Button
-                    onClick={() => setShowFormatMenu(!showFormatMenu)}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                  >
-                    {outputFormat.toUpperCase()}
-                  </Button>
-                  {showFormatMenu && (
-                    <div className="absolute bottom-full mb-2 left-0 bg-card border border-border rounded shadow-lg p-1 flex flex-col gap-1">
-                      <Button
-                        onClick={() => {
-                          setOutputFormat('mp4');
-                          setShowFormatMenu(false);
-                        }}
-                        variant={outputFormat === 'mp4' ? 'default' : 'outline'}
-                        size="sm"
-                        className="w-16"
-                      >
-                        MP4
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setOutputFormat('webm');
-                          setShowFormatMenu(false);
-                        }}
-                        variant={outputFormat === 'webm' ? 'default' : 'outline'}
-                        size="sm"
-                        className="w-16"
-                      >
-                        WebM
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+
 
               {/* Recording Button */}
               {isDisplayActive && isCameraActive && (
