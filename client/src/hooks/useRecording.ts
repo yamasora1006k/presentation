@@ -149,16 +149,37 @@ export const useRecording = (
     mediaRecorderRef.current.onstop = async () => {
       const webmBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
       
-      if (outputFormat === 'mp4' && isFFmpegReady) {
+      if (outputFormat === 'mp4') {
         // Convert to MP4
-        const mp4Blob = await convertWebMToMP4(webmBlob);
-        if (mp4Blob) {
-          const url = URL.createObjectURL(mp4Blob);
+        try {
+          console.log('MP4 conversion started, FFmpeg ready:', isFFmpegReady);
+          const mp4Blob = await convertWebMToMP4(webmBlob);
+          if (mp4Blob) {
+            console.log('MP4 conversion completed, downloading...');
+            const url = URL.createObjectURL(mp4Blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.mp4`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+          } else {
+            console.error('MP4 conversion failed, downloading as WebM instead');
+            const url = URL.createObjectURL(webmBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+          }
+        } catch (err) {
+          console.error('MP4 conversion error:', err);
+          // Fallback to WebM
+          const url = URL.createObjectURL(webmBlob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.mp4`;
+          a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
           a.click();
-          URL.revokeObjectURL(url);
+          setTimeout(() => URL.revokeObjectURL(url), 100);
         }
       } else {
         // Download as WebM
@@ -167,7 +188,7 @@ export const useRecording = (
         a.href = url;
         a.download = `presentation-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
       }
     };
 
@@ -180,7 +201,7 @@ export const useRecording = (
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
     }
-  }, []);
+  }, [outputFormat, convertWebMToMP4, isFFmpegReady]);
 
   return {
     isRecording,

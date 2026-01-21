@@ -213,6 +213,9 @@ export default function Home() {
               <p className="text-muted-foreground text-lg">
                 画面共有を開始してください
               </p>
+              <p className="text-muted-foreground text-xs mt-2">
+                Made by Sora
+              </p>
             </div>
           </div>
         )}
